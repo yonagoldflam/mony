@@ -20,3 +20,4 @@ ENV/
 *.bak
 *.tmp
 .DS_Store
+.devcontainer
