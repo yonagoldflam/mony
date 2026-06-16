@@ -30,7 +30,22 @@ sheet = client.open_by_key(SPREADSHEET_ID).sheet1
 data = sheet.get_all_records()
 df = pd.DataFrame(data)
 
+# וידוא שהעמודה סכום היא מספרית
+if "סכום" in df.columns:
+    df["סכום"] = pd.to_numeric(
+        df["סכום"],
+        errors="coerce"
+    ).fillna(0)
+
 st.title("מתנות מירי ושניאור")
+
+# =========================
+# Success Message
+# =========================
+
+if "gift_added" in st.session_state:
+    st.success(st.session_state["gift_added"])
+    del st.session_state["gift_added"]
 
 # =========================
 # Search
@@ -44,11 +59,16 @@ search_text = st.text_input(
 # Tag Filter
 # =========================
 
-existing_tags = sorted(df["תגית"].dropna().astype(str).unique())
+existing_tags = sorted(
+    df["תגית"].dropna().astype(str).unique()
+)
 
 tags = ["הכל"] + existing_tags
 
-selected_tag = st.selectbox("בחר תגית", tags)
+selected_tag = st.selectbox(
+    "בחר תגית",
+    tags
+)
 
 filtered = df.copy()
 
@@ -59,7 +79,7 @@ if selected_tag != "הכל":
     ]
 
 # =========================
-# SMART SEARCH (AND by words)
+# SMART SEARCH
 # =========================
 
 if search_text:
@@ -67,9 +87,17 @@ if search_text:
 
     for word in words:
         filtered = filtered[
-            filtered["שם_פרטי"].astype(str).str.contains(word, case=False, na=False)
+            filtered["שם_פרטי"].astype(str).str.contains(
+                word,
+                case=False,
+                na=False
+            )
             |
-            filtered["שם_משפחה"].astype(str).str.contains(word, case=False, na=False)
+            filtered["שם_משפחה"].astype(str).str.contains(
+                word,
+                case=False,
+                na=False
+            )
         ]
 
 # =========================
@@ -79,9 +107,11 @@ if search_text:
 col1, col2 = st.columns(2)
 
 with col1:
+    total_amount = filtered["סכום"].sum()
+
     st.metric(
         "סה״כ כסף",
-        f"{filtered['סכום'].sum():,.0f} ₪"
+        f"{total_amount:,.0f} ₪"
     )
 
 with col2:
@@ -101,7 +131,7 @@ st.dataframe(
 )
 
 # =========================
-# ADD NEW GIFT (BOTTOM)
+# ADD NEW GIFT
 # =========================
 
 st.divider()
@@ -132,5 +162,10 @@ with st.form("add_gift_form"):
             new_tag
         ])
 
-        st.success("המתנה נוספה בהצלחה 🎉")
+        full_name = f"{new_first_name} {new_last_name}".strip()
+
+        st.session_state["gift_added"] = (
+            f"{full_name} נוסף בהצלחה 🎉"
+        )
+
         st.rerun()
