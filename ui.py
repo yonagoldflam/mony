@@ -33,6 +33,14 @@ df = pd.DataFrame(data)
 st.title("מתנות מירי ושניאור")
 
 # =========================
+# Success Message
+# =========================
+
+if "gift_added" in st.session_state:
+    st.success(st.session_state["gift_added"])
+    del st.session_state["gift_added"]
+
+# =========================
 # Search
 # =========================
 
@@ -59,7 +67,7 @@ if selected_tag != "הכל":
     ]
 
 # =========================
-# SMART SEARCH (AND by words)
+# SMART SEARCH
 # =========================
 
 if search_text:
@@ -67,9 +75,13 @@ if search_text:
 
     for word in words:
         filtered = filtered[
-            filtered["שם_פרטי"].astype(str).str.contains(word, case=False, na=False)
+            filtered["שם_פרטי"].astype(str).str.contains(
+                word, case=False, na=False
+            )
             |
-            filtered["שם_משפחה"].astype(str).str.contains(word, case=False, na=False)
+            filtered["שם_משפחה"].astype(str).str.contains(
+                word, case=False, na=False
+            )
         ]
 
 # =========================
@@ -101,7 +113,7 @@ st.dataframe(
 )
 
 # =========================
-# ADD NEW GIFT (BOTTOM)
+# ADD NEW GIFT
 # =========================
 
 st.divider()
@@ -132,5 +144,10 @@ with st.form("add_gift_form"):
             new_tag
         ])
 
-        st.success("המתנה נוספה בהצלחה 🎉")
+        full_name = f"{new_first_name} {new_last_name}".strip()
+
+        st.session_state["gift_added"] = (
+            f"{full_name} נוסף בהצלחה 🎉"
+        )
+
         st.rerun()
